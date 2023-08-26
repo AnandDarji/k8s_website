@@ -1,0 +1,48 @@
+pipeline{
+	agent none
+	environment {
+		DOCKERHUB_CRED = credentials('84717631-bdbb-4a6b-9d57-267d1a2cc8c2')
+	}
+	stages{
+		
+		stage('hello'){
+			agent{
+				label 'master'
+			}
+			steps{
+				echo 'hello world'
+			}
+		}
+		
+		stage('git'){
+			agent{
+				label 'master'
+			}
+			steps{
+				git'https://github.com/AnandDarji/k8s_website.git'
+			}
+		}
+		
+		stage('docker'){
+			agent{
+				label 'master'
+			}
+			steps{
+				sh 'sudo docker build /home/azureuser/project2/workspace/job -t anand/project2
+				sh 'sudo echo $DOCKERHUB_CRED_PSW | sudo docker login -u $DOCKERHUB_CRED_USR --password-stdin'
+				sh 'sudo docker push anand/project2'
+			}
+		}
+		
+		stage('kubernetes'){
+			agent{
+				label 'master'
+			}
+			steps{
+				sh 'kubectl create -f deploy.yaml'
+				sh 'kubectl create -f svc.yaml'
+			}
+		}
+		
+	}
+}
